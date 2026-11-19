@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#123b35">
+<meta name="description" content="Checklist laboral ALMAR">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>CHECKLIST ALMAR</title>
+<style>
+:root{--green:#123b35;--green2:#1d6658;--bg:#f3f6f5;--card:#fff;--ink:#172522;--muted:#64736f;--line:#e0e8e5}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{background:var(--green);color:white;padding:24px 18px 22px;border-radius:0 0 22px 22px}
+header .small{opacity:.8;font-size:12px;letter-spacing:.12em;font-weight:700}
+h1{font-size:24px;margin:5px 0 4px}header p{margin:0;color:#d3e4df;font-size:13px}
+main{max-width:650px;margin:auto;padding:16px}
+.selectors{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.field,.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px}
+label{display:block;color:var(--muted);font-size:11px;font-weight:800;letter-spacing:.07em;margin-bottom:6px}
+select{width:100%;border:0;background:#f5f8f7;border-radius:9px;padding:10px;font-size:16px;color:var(--ink)}
+.panel{margin-bottom:14px}
+.progressrow{display:flex;justify-content:space-between;align-items:center;font-weight:750}
+.count{color:var(--green2);font-size:19px}
+.track{height:9px;background:#e7eeeb;border-radius:9px;overflow:hidden;margin-top:10px}
+.fill{height:100%;width:0;background:#27916e;transition:width .2s}
+.sectiontitle{font-size:13px;color:var(--muted);font-weight:800;letter-spacing:.07em;margin:18px 4px 8px}
+.task{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:8px;min-height:54px}
+.task input{width:21px;height:21px;accent-color:var(--green2);flex-shrink:0}
+.task span{font-size:14px;font-weight:600;line-height:1.3}
+.task.done span{text-decoration:line-through;color:#7b8985}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+button{border:0;border-radius:10px;padding:11px 14px;font-weight:700;background:var(--green);color:white}
+button.secondary{background:#e4ece9;color:var(--green)}
+.note{font-size:12px;color:var(--muted);line-height:1.45;margin:12px 3px}
+footer{text-align:center;color:var(--muted);font-size:11px;padding:18px}
+</style>
+</head>
+<body>
+<header><div class="small">CONTROL DE ACTIVIDADES</div><h1>CHECKLIST ALMAR</h1><p>Seguimiento laboral semanal</p></header>
+<main>
+ <div class="selectors">
+  <div class="field"><label for="year">AÑO</label><select id="year"></select></div>
+  <div class="field"><label for="week">SEMANA LABORAL</label><select id="week"></select></div>
+ </div>
+ <section class="panel">
+  <div class="progressrow"><span>Avance de la semana</span><span class="count" id="count">0/13</span></div>
+  <div class="track"><div class="fill" id="fill"></div></div>
+  <div class="note" id="review">Semana revisada: —</div>
+ </section>
+ <div class="sectiontitle">ACTIVIDADES</div>
+ <div id="tasks"></div>
+ <div class="actions">
+  <button class="secondary" id="clear">Desmarcar semana</button>
+  <button class="secondary" id="export">Exportar respaldo</button>
+  <button class="secondary" id="import">Importar respaldo</button>
+  <input id="file" type="file" accept="application/json" hidden>
+ </div>
+ <p class="note">Los avances se guardan en este navegador y en este dispositivo. Exporta un respaldo si vas a cambiar de celular o navegador. La aplicación inicia con 9 actividades completadas en la semana laboral 47 de 2026.</p>
+</main>
+<footer>CHECKLIST ALMAR · Datos guardados localmente</footer>
+<script>
+const activities=[
+"HT EB ALMAR","SMPROG","MUESTRAS DE ACEITE","CONSUMO AIREACION KWDIESEL",
+"CONSUMO SEMANAL CANTGALLO","REUNIRSE CON BODEGA ERRORES","RECAMBIO ALMAR",
+"INDICADORES GE","CALCULO RATIO TANQUE COMBUSTIBLE","NIVELES Y DRENAJE",
+"PLANIFICACIÓN TALLER","PLANIFICACIÓN EB","ACTUALIZAR OT SMPROG"
+];
+const initialDone=[0,1,3,4,5,6,7,8,9];
+const $=id=>document.getElementById(id);
+const key=(y,w)=>`almar:${y}:${w}`;
+let data=JSON.parse(localStorage.getItem("almar:data")||"{}");
+if(!data["2026:47"]) data["2026:47"]=initialDone;
+const now=new Date(), yearSel=$("year"),weekSel=$("week");
+for(let y=2026;y<=2040;y++){let o=document.createElement("option");o.value=y;o.textContent=y;yearSel.append(o)}
+yearSel.value="2026";
+function fillWeeks(){
+ weekSel.innerHTML="";
+ for(let w=1;w<=53;w++){let o=document.createElement("option");o.value=w;o.textContent=`Semana ${w}`;weekSel.append(o)}
+}
+fillWeeks();weekSel.value="47";
+function current(){return data[`${yearSel.value}:${weekSel.value}`]||[]}
+function save(){data[`${yearSel.value}:${weekSel.value}`]=current();localStorage.setItem("almar:data",JSON.stringify(data));render()}
+function render(){
+ const done=current(), host=$("tasks");host.innerHTML="";
+ activities.forEach((name,i)=>{
+  const row=document.createElement("label");row.className="task"+(done.includes(i)?" done":"");
+  const cb=document.createElement("input");cb.type="checkbox";cb.checked=done.includes(i);
+  cb.addEventListener("change",()=>{let d=current().filter(x=>x!==i);if(cb.checked)d.push(i);data[`${yearSel.value}:${weekSel.value}`]=d;localStorage.setItem("almar:data",JSON.stringify(data));render()});
+  const span=document.createElement("span");span.textContent=name;row.append(cb,span);host.append(row);
+ });
+ $("count").textContent=`${done.length}/13`;
+ $("fill").style.width=`${done.length/13*100}%`;
+ const w=Number(weekSel.value), y=Number(yearSel.value);
+ let ry=w-1, ryear=y;if(ry<1){ry=52;ryear=y-1}
+ $("review").textContent=`Semana revisada: ${ry} · Año de revisión: ${ryear}`;
+}
+yearSel.addEventListener("change",render);weekSel.addEventListener("change",render);
+$("clear").onclick=()=>{if(confirm("¿Desmarcar todas las actividades de esta semana?")){data[`${yearSel.value}:${weekSel.value}`]=[];localStorage.setItem("almar:data",JSON.stringify(data));render()}};
+$("export").onclick=()=>{const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="respaldo_checklist_almar.json";a.click();URL.revokeObjectURL(a.href)};
+$("import").onclick=()=>$("file").click();
+$("file").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const obj=JSON.parse(await f.text());if(typeof obj!=="object"||!obj)throw Error();data=obj;localStorage.setItem("almar:data",JSON.stringify(data));render();alert("Respaldo importado")}catch{alert("El archivo no es válido")}};
+if("serviceWorker" in navigator && location.protocol.startsWith("http"))navigator.serviceWorker.register("./sw.js");
+render();
+</script>
+</body></html>

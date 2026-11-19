@@ -1,0 +1,16 @@
+CHECKLIST ALMAR — versión PWA
+
+Contenido:
+- index.html: aplicación.
+- manifest.webmanifest: identidad instalable.
+- sw.js: caché para uso sin conexión tras la primera visita.
+- icon.svg: icono.
+
+Para instalar como app:
+1. Publica estos archivos en un alojamiento HTTPS estático (por ejemplo, GitHub Pages o un hosting web).
+2. Abre la URL HTTPS en Chrome en Android.
+3. Menú ⋮ > Instalar aplicación (o Añadir a pantalla principal).
+
+Los datos se guardan en el almacenamiento local del navegador del dispositivo. Usa "Exportar respaldo" periódicamente. Para cambiar de dispositivo, exporta e importa el JSON.
+
+Nota: esta entrega es el paquete de la app, no está publicada ni instalada automáticamente en el teléfono.
